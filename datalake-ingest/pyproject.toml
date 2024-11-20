@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "datalake-ingest"
+version = "0.1.0"
+description = ""
+authors = ["Ben Sivoravong <bensivo@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = {extras = ["standard"], version = "^0.115.5"}
+pydantic = "^2.9.2"
+minio = "^7.2.11"
+nanoid = "^2.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
