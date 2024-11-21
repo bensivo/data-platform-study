@@ -1,0 +1,13 @@
+default:
+    just --list
+
+install:
+    poetry install 
+
+bronze:
+    poetry run spark-submit \
+        --master spark://localhost:7077 \
+        --name bronze \
+        --deploy-mode client \
+        ./bronze.py
+
