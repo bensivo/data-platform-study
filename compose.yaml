@@ -15,16 +15,40 @@ services:
     command: server /data --console-address ":9001"
 
   minio-init:
-    build:
-      context: .
-      dockerfile: minio-init.dockerfile
+    image: minio-init
+    container_name: minio-init
     depends_on:
       - minio
     environment:
       MINIO_HOST: minio
       MINIO_ACCESS_KEY: my-access-key
       MINIO_SECRET_KEY: my-secret-key
-    
+
+  ingest:
+    image: ingest
+    container_name: ingest
+    ports:
+      - "8000:8000"
+    environment:
+      MINIO_HOST: minio
+      MINIO_ACCESS_KEY: my-access-key
+      MINIO_SECRET_KEY: my-secret-key
+
+  spark-master:
+    image: spark-master
+    container_name: spark-master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+
+  spark-worker:
+    image: spark-worker
+    depends_on:
+      - spark-master
+    container_name: spark-worker
+    ports:
+      - "8081:8081"
+
 networks:
   default:
     name: data-platform

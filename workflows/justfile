@@ -11,3 +11,5 @@ bronze:
         --deploy-mode client \
         ./bronze.py
 
+    podman run 
+

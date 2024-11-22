@@ -43,11 +43,15 @@ def foobar(event: Event) -> Dict[str, str]:
     year  = current_time.year
     month = current_time.month
     day   = current_time.day
+    hour = current_time.hour
+    minute = current_time.minute
+    second = current_time.second
 
-    iso8601 = current_time.isoformat(timespec='seconds')
+    time_str = current_time.strftime("%Y-%m-%dT%H-%M-%S") # NOTE: not ISO8601, becuase colons in filenames can mess with spark / hadoop
+
     id = uuid.uuid4().hex
 
-    object_name = f'{event.metadata.name}/{event.metadata.version}/{year}/{month}/{day}/{iso8601}-{id}.json'
+    object_name = f'{event.metadata.name}/{event.metadata.version}/{year}/{month}/{day}/{time_str}_{id}.json'
 
     object_data_str = event_json
     object_data_bytes = object_data_str.encode('utf-8')

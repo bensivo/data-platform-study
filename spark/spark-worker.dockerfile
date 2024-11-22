@@ -2,9 +2,9 @@ FROM spark-base
 
 WORKDIR /spark-worker
 
-COPY ./worker-entrypoint.sh worker-entrypoint.sh
-RUN chmod +x worker-entrypoint.sh
+COPY ./spark-worker-entrypoint.sh entrypoint.sh
+RUN chmod +x entrypoint.sh
 
 EXPOSE 8081
 
-ENTRYPOINT ["/spark-worker/worker-entrypoint.sh"]
+ENTRYPOINT ["/spark-worker/entrypoint.sh"]
