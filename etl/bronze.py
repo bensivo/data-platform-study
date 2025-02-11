@@ -13,10 +13,10 @@ builder = SparkSession.builder.appName("bronze")
 # NOTE: To get iceberg to work, we had to make sure to add the iceberg jars to the spark dockerfile
 builder.config("spark.sql.extensions","org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
 builder.config("spark.sql.catalog.bronze","org.apache.iceberg.spark.SparkCatalog")
-builder.config("spark.sql.catalog.bronze.type","hadoop") # NOTE: minio / s3 is a hadoop-compatible filesystem according to spark
+builder.config("spark.sql.catalog.bronze.type","hadoop") # NOTE: The 'hadoop' catalog option uses object-storage itself as the catalog
 builder.config("spark.sql.catalog.bronze.warehouse","s3a://bronze/")
 
-# Configurations for Minio (S3)
+# Configurations for our object-storage service, Minio
 #
 # NOTE: Just like iceberg, to get this to work, we had to add the hadoop-aws and aws jars to the spark dockerfile
 builder.config("spark.hadoop.fs.s3a.access.key", "my-access-key")
@@ -28,8 +28,10 @@ builder.config("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
 
 spark = builder.getOrCreate()
 
-df = spark.read.option("header", "true") \
-        .json("s3a://raw/foobar/1.0.0/2024/11/22/*.json")
+df = spark.read \
+        .option("header", "true") \
+        .option("recursiveFileLookup", "true") \
+        .json("s3a://raw/page_load/v1/")
 
 df.printSchema()
 df.show()
@@ -39,7 +41,7 @@ df.show()
 # "example" is the name of the database / schema, used for domain separation
 # "foobar" is the name of the iceberg table itself
 #
-table_name = "bronze.example.foobar"
+table_name = "bronze.example.page_load"
 
 table_exists = spark.catalog.tableExists(table_name)
 if not table_exists:
