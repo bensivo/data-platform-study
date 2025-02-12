@@ -30,7 +30,14 @@ spark = builder.getOrCreate()
 
 df = spark.sql(f"""
     SELECT metadata.name, metadata.version, metadata.timestamp, payload.page, payload.user_name, payload.browser 
-    FROM bronze.example.page_load LIMIT 10
+    FROM bronze.data_platform_example.page_load_v1 LIMIT 10
+""")
+
+df.show()
+
+df = spark.sql(f"""
+    SELECT COUNT(*)
+    FROM bronze.data_platform_example.page_load_v1
 """)
 df.show()
 

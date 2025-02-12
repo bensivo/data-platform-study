@@ -27,6 +27,10 @@ spark:
     podman compose up -d spark-master spark-worker 
     open http://localhost:8080
 
+presto:
+    podman compose up -d presto
+    open http://localhost:8888
+
 
 etl-bronze:
     podman run \
@@ -42,8 +46,19 @@ etl-query:
     -it \
     spark-base /opt/spark/bin/spark-submit --master spark://spark-master:7077 /etl/query.py
 
-presto:
-    podman compose up -d presto
+etl-silver:
+    podman run \
+    --network data-platform \
+    -v $PWD/etl:/etl \
+    -it \
+    spark-base /opt/spark/bin/spark-submit --master spark://spark-master:7077 /etl/silver.py
+
+etl-gold:
+    podman run \
+    --network data-platform \
+    -v $PWD/etl:/etl \
+    -it \
+    spark-base /opt/spark/bin/spark-submit --master spark://spark-master:7077 /etl/gold.py
 
 down: 
     podman compose down

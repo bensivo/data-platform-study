@@ -46,11 +46,46 @@ This repo is a personal study on Data Engineering / Analytics pipelines, and the
     just etl-bronze
     ```
 
-    This job reads files from the "RAW" folder, parses them, then writes them to a table in "BRONZE" in iceberg format
+    This job reads files from the "RAW" folder, parses them, then writes them to a table in "BRONZE" in iceberg format.
 
-7. Query the data from the bronze table, also using spark
+
+    You can query the data using spark with the below command:
     ```
     just etl-query
     ```
 
-    TODO: figure out how to get spark-thriftserver working so that I can query with a normal db interface.
+    Or, for a slightly better UX, you can use a query engine, in the next step.
+
+7. Start the Presto Server, our query engine
+    ```
+    just presto
+    ```
+
+    The Preso UI will be at http://localhost:8888. Find the SQL Query editor, and submit this query
+    ```
+    SELECT * FROM bronze.data_platform_example.page_load_v1 
+
+    SELECT metadata.name, metadata.version, metadata.timestamp, payload.page, payload.user_name, payload.browser from bronze.data_platform_example.page_load_v1 limit 100
+    ```
+
+    The Presto SQL UI is meant for exploration, not production use, so it limits results to 100 rows. However, presto has other clients, including a REST API
+    ```
+    curl \
+    --request POST \
+    --header "X-Presto-User: admin" \
+    --data "SELECT metadata.name, metadata.version, metadata.timestamp, payload.page, payload.user_name, payload.browser from bronze.data_platform_example.page_load_v1" \
+    --url http://localhost:8888/v1/statement \
+    | jq
+    ```
+
+    NOTE: This is an async API, you'll get a JSON response with a "nextUri" field. Make a GET request to that uri to get either a "queued" message or your results. 
+
+8. Run the bronze -> silver ETL job. Then see the result in presto
+   ```
+   SELECT * from silver.data_platform_example.page_load
+   ```
+
+9. Run the silver -> gold ETL job. Then see the result in presto
+   ```
+   SELECT * from gold.data_platform_example.page_loads_per_day where page = '/home' order by date asc 
+   ```
