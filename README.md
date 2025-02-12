@@ -25,6 +25,23 @@ This repo is a personal study on Data Engineering / Analytics pipelines, and the
 
     This starts a python API at http://localhost:8000. It exposes a single endpoint at `POST /event`, when you POST data to this endpoint, it'll get written to minio in the RAW bucket, with some metadata (NOTE: it does some batching internally). 
 
+    ```
+    curl \
+    --request POST \
+    --url http://localhost:8000/event \
+    --header 'Content-Type: application/json' \
+    --data '{
+        "metadata":{
+            "name":"example", 
+            "version":"v1", 
+            "timestamp":"1970-01-01T00:00:00"
+        }, 
+        "payload": {
+            "foo":"bar"
+        }
+    }'
+    ```
+
 4. Generate some data
     ```
     just producer

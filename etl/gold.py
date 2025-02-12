@@ -40,7 +40,6 @@ builder.config("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
 builder.config("spark.sql.catalog.gold.warehouse", "s3a://gold/")
 
 
-
 spark = builder.getOrCreate()
 
 
@@ -67,5 +66,4 @@ FROM (
   FROM silver.data_platform_example.page_load
 ) subquery
 GROUP BY date, page
-order by date desc
 """)

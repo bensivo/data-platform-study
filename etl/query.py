@@ -5,20 +5,21 @@
 from pyspark.sql import SparkSession
 
 # Create a spark session
-builder = SparkSession.builder.appName("query")
+builder = SparkSession.builder.appName("bronze")
 
 # Configurations for our apache iceberg catalogs.
 # For this job, we're only using the 'bronze' catalog
 #
 # NOTE: To get iceberg to work, we had to make sure to add the iceberg jars to the spark dockerfile
 builder.config("spark.sql.extensions","org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-builder.config("spark.sql.catalog.bronze","org.apache.iceberg.spark.SparkCatalog")
-builder.config("spark.sql.catalog.bronze.type","hadoop") # NOTE: The 'hadoop' catalog option uses object-storage itself as the catalog
-builder.config("spark.sql.catalog.bronze.warehouse","s3a://bronze/")
 
-# Configurations for our object-storage service, Minio
+# Configurations for our bronze catalog, using the hadoop catalog type
 #
 # NOTE: Just like iceberg, to get this to work, we had to add the hadoop-aws and aws jars to the spark dockerfile
+builder.config("spark.sql.catalog.bronze","org.apache.iceberg.spark.SparkCatalog")
+builder.config("spark.sql.catalog.bronze.type","hadoop") # NOTE: The 'hadoop' catalog option uses object-storage itself as the catalog
+builder.config("spark.sql.catalog.bronze.warehouse", "s3a://bronze/")
+
 builder.config("spark.hadoop.fs.s3a.access.key", "my-access-key")
 builder.config("spark.hadoop.fs.s3a.secret.key", "my-secret-key")
 builder.config("spark.hadoop.fs.s3a.endpoint", "http://minio:9000")

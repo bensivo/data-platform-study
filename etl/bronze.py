@@ -18,18 +18,18 @@ builder.config("spark.sql.extensions","org.apache.iceberg.spark.extensions.Icebe
 # NOTE: Just like iceberg, to get this to work, we had to add the hadoop-aws and aws jars to the spark dockerfile
 builder.config("spark.sql.catalog.bronze","org.apache.iceberg.spark.SparkCatalog")
 builder.config("spark.sql.catalog.bronze.type","hadoop") # NOTE: The 'hadoop' catalog option uses object-storage itself as the catalog
+builder.config("spark.sql.catalog.bronze.warehouse", "s3a://bronze/")
+
 builder.config("spark.hadoop.fs.s3a.access.key", "my-access-key")
 builder.config("spark.hadoop.fs.s3a.secret.key", "my-secret-key")
 builder.config("spark.hadoop.fs.s3a.endpoint", "http://minio:9000")
 builder.config("spark.hadoop.fs.s3a.path.style.access", "true")
 builder.config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
 builder.config("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-builder.config("spark.sql.catalog.bronze.warehouse", "s3a://bronze/")
 
 spark = builder.getOrCreate()
 
 df = spark.read \
-        .option("header", "true") \
         .option("recursiveFileLookup", "true") \
         .json("s3a://raw/page_load/v1/")
 
@@ -46,7 +46,7 @@ table_name = "bronze.data_platform_example.page_load_v1"
 table_exists = spark.catalog.tableExists(table_name)
 if not table_exists:
     # If this is our first run ever, the table won't exist, and we need to create it
-    df.write.format('iceberg').mode('overwrite').saveAsTable(table_name)
+    df.write.format('iceberg').saveAsTable(table_name)
 else:
     # On further runs, we don't want to overwrite the whole table, just add to it
     # because this job is meant to be run incrementally.

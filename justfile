@@ -9,7 +9,6 @@ build:
     cd spark && podman build -t spark-base -f spark-base.dockerfile
     cd spark && podman build -t spark-master -f spark-master.dockerfile
     cd spark && podman build -t spark-worker -f spark-worker.dockerfile
-    # cd spark && podman build -t spark-thrift -f spark-thrift.dockerfile
 
 
 minio:

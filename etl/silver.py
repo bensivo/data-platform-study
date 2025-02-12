@@ -55,14 +55,16 @@ USING ICEBERG
 LOCATION 's3a://silver/data_platform_example/page_load'
 """)
 
-spark.sql(f"""
-INSERT INTO silver.data_platform_example.page_load
+df = spark.sql(f"""
 SELECT
     metadata.name AS event_name,
     metadata.version AS event_version,
-    CAST(metadata.timestamp AS TIMESTAMP) AS event_timestamp,
+    CAST(metadata.timestamp AS TIMESTAMP) AS event_ts,
     payload.page AS page,
     payload.user_name AS user_name,
     payload.browser AS browser
 FROM bronze.data_platform_example.page_load_v1
 """)
+
+df_dedup = df.dropDuplicates()
+df_dedup.write.format("iceberg").mode("overwrite").save("s3a://silver/data_platform_example/page_load")
