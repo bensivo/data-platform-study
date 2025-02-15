@@ -13,34 +13,46 @@ builder = SparkSession.builder.appName("silver")
 # NOTE: To get iceberg to work, we had to make sure to add the iceberg jars to the spark dockerfile
 builder.config("spark.sql.extensions","org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
 
-# Configurations for our bronze catalog, using the hadoop catalog type
-#
-# NOTE: Just like iceberg, to get this to work, we had to add the hadoop-aws and aws jars to the spark dockerfile
+# Use a Hadoop catalog, storing metadata in the file system itself
+# The easiest solution, but lacks some key feautres (esp in quering)
+# 
+# builder.config("spark.sql.catalog.bronze","org.apache.iceberg.spark.SparkCatalog")
+# builder.config("spark.sql.catalog.bronze.type","hadoop") # NOTE: The 'hadoop' catalog option uses object-storage itself as the catalog
+# builder.config("spark.sql.catalog.bronze.warehouse", "s3a://bronze/")
+
+# Configure our bronze catalog, using nessie, iceberg,  and s3a (minio)
+# 
 builder.config("spark.sql.catalog.bronze","org.apache.iceberg.spark.SparkCatalog")
-builder.config("spark.sql.catalog.bronze.type","hadoop") # NOTE: The 'hadoop' catalog option uses object-storage itself as the catalog
-builder.config("spark.hadoop.fs.s3a.access.key", "my-access-key")
-builder.config("spark.hadoop.fs.s3a.secret.key", "my-secret-key")
-builder.config("spark.hadoop.fs.s3a.endpoint", "http://minio:9000")
-builder.config("spark.hadoop.fs.s3a.path.style.access", "true")
-builder.config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
-builder.config("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+builder.config("spark.sql.catalog.bronze.type", "nessie")
+builder.config("spark.sql.catalog.bronze.uri", "http://nessie-bronze:19120/api/v1")
+builder.config("spark.sql.catalog.bronze.ref", "main")
+builder.config("spark.sql.catalog.bronze.authentication.type", "NONE") # BEARER, OAUTH2, AWS
 builder.config("spark.sql.catalog.bronze.warehouse", "s3a://bronze/")
 
-# Configurations for our silver catalog, using the hadoop catalog type
-#
-# NOTE: Just like iceberg, to get this to work, we had to add the hadoop-aws and aws jars to the spark dockerfile
+# Configure our silver catalog, using nessie, iceberg,  and s3a (minio)
+# 
 builder.config("spark.sql.catalog.silver","org.apache.iceberg.spark.SparkCatalog")
-builder.config("spark.sql.catalog.silver.type","hadoop") # NOTE: The 'hadoop' catalog option uses object-storage itself as the catalog
+builder.config("spark.sql.catalog.silver.type", "nessie")
+builder.config("spark.sql.catalog.silver.uri", "http://nessie-silver:19120/api/v1")
+builder.config("spark.sql.catalog.silver.ref", "main")
+builder.config("spark.sql.catalog.silver.authentication.type", "NONE") # BEARER, OAUTH2, AWS
+builder.config("spark.sql.catalog.silver.warehouse", "s3a://silver/")
+
+# Configure the S3a filesystem
+#
+builder.config("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
 builder.config("spark.hadoop.fs.s3a.access.key", "my-access-key")
 builder.config("spark.hadoop.fs.s3a.secret.key", "my-secret-key")
 builder.config("spark.hadoop.fs.s3a.endpoint", "http://minio:9000")
 builder.config("spark.hadoop.fs.s3a.path.style.access", "true")
 builder.config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
-builder.config("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-builder.config("spark.sql.catalog.silver.warehouse", "s3a://silver/")
 
 spark = builder.getOrCreate()
 
+spark.sql("""
+    CREATE SCHEMA IF NOT EXISTS silver.data_platform_example
+    LOCATION 's3a://silver/data_platform_example'
+""")
 
 spark.sql("""
 CREATE TABLE IF NOT EXISTS silver.data_platform_example.page_load (
@@ -66,5 +78,9 @@ SELECT
 FROM bronze.data_platform_example.page_load_v1
 """)
 
-df_dedup = df.dropDuplicates()
-df_dedup.write.format("iceberg").mode("overwrite").save("s3a://silver/data_platform_example/page_load")
+df = df.dropDuplicates()
+
+df.write \
+    .format("iceberg") \
+    .mode("overwrite") \
+    .saveAsTable("silver.data_platform_example.page_load")

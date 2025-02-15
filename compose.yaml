@@ -1,10 +1,10 @@
 version: '3.4'
 
-# x-superset-image: &superset-image apachesuperset.docker.scarf.sh/apache/superset:${TAG:-latest-dev}
-# x-superset-volumes:
-#   &superset-volumes # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
-#   - ./superset:/app/docker
-#   - superset_home:/app/superset_home
+x-superset-image: &superset-image apachesuperset.docker.scarf.sh/apache/superset:${TAG:-latest-dev}
+x-superset-volumes:
+  &superset-volumes # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
+  - ./superset:/app/docker
+  - superset_home:/app/superset_home
 
 services:
   minio:
@@ -60,7 +60,40 @@ services:
     container_name: spark-worker
     ports:
       - "8081:8081"
-    
+
+  # unitycatalog-ui:
+  #   image: unitycatalog-ui
+  #   container_name: unitycatalog-ui
+  #   ports:
+  #     - 10000:80
+  
+  # unitycatalog-server:
+  #   image: unitycatalog/unitycatalog
+  #   container_name: unitycatalog-server
+  #   ports:
+  #     - 9999:8080
+  #   volumes:
+  #     - ./unitycatalog/server.properties:/home/unitycatalog/etc/conf/server.properties
+  #     - ./uc-data/:/home/unitycatalog/etc/data/
+
+  # docker run -d -p 9083:9083 --env SERVICE_NAME=metastore --name metastore-standalone apache/hive:${HIVE_VERSION}
+
+  nessie-bronze:
+    image: projectnessie/nessie:latest
+    container_name: nessie-bronze
+    ports:
+      - 10001:19120    
+  nessie-silver:
+    image: projectnessie/nessie:latest
+    container_name: nessie-silver
+    ports:
+      - 10002:19120   
+  nessie-gold:
+    image: projectnessie/nessie:latest
+    container_name: nessie-gold
+    ports:
+      - 10003:19120   
+
   presto:
     image: prestodb/presto
     container_name: presto
@@ -74,100 +107,100 @@ services:
       - ./presto/gold.properties:/opt/presto-server/etc/catalog/gold.properties
 
   
-  # redis:
-  #   image: redis:7
-  #   container_name: superset_cache
-  #   restart: unless-stopped
-  #   volumes:
-  #     - redis:/data
+  redis:
+    image: redis:7
+    container_name: superset_cache
+    restart: unless-stopped
+    volumes:
+      - redis:/data
 
-  # db:
-  #   env_file: superset/.env
-  #   image: postgres:15
-  #   container_name: superset_db
-  #   restart: unless-stopped
-  #   volumes:
-  #     - db_home:/var/lib/postgresql/data
-  #     - ./docker/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+  db:
+    env_file: superset/.env
+    image: postgres:15
+    container_name: superset_db
+    restart: unless-stopped
+    volumes:
+      - db_home:/var/lib/postgresql/data
+      - ./docker/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
 
-  # superset:
-  #   env_file: superset/.env 
-  #   image: *superset-image
-  #   container_name: superset_app
-  #   command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
-  #   user: "root"
-  #   restart: unless-stopped
-  #   ports:
-  #     - 8088:8088
-  #   depends_on:
-  #     superset-init:
-  #       condition: service_completed_successfully
-  #   volumes: *superset-volumes
-  #   environment:
-  #     SUPERSET_LOG_LEVEL: "${SUPERSET_LOG_LEVEL:-info}"
+  superset:
+    env_file: superset/.env 
+    image: *superset-image
+    container_name: superset_app
+    command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
+    user: "root"
+    restart: unless-stopped
+    ports:
+      - 8088:8088
+    depends_on:
+      superset-init:
+        condition: service_completed_successfully
+    volumes: *superset-volumes
+    environment:
+      SUPERSET_LOG_LEVEL: "${SUPERSET_LOG_LEVEL:-info}"
 
-  # superset-init:
-  #   image: *superset-image
-  #   container_name: superset_init
-  #   command: ["/app/docker/docker-init.sh"]
-  #   env_file: superset/.env
-  #   depends_on:
-  #     db:
-  #       condition: service_started
-  #     redis:
-  #       condition: service_started
-  #   user: "root"
-  #   volumes: *superset-volumes
-  #   healthcheck:
-  #     disable: true
-  #   environment:
-  #     SUPERSET_LOAD_EXAMPLES: "${SUPERSET_LOAD_EXAMPLES:-yes}"
-  #     SUPERSET_LOG_LEVEL: "${SUPERSET_LOG_LEVEL:-info}"
+  superset-init:
+    image: *superset-image
+    container_name: superset_init
+    command: ["/app/docker/docker-init.sh"]
+    env_file: superset/.env
+    depends_on:
+      db:
+        condition: service_started
+      redis:
+        condition: service_started
+    user: "root"
+    volumes: *superset-volumes
+    healthcheck:
+      disable: true
+    environment:
+      # SUPERSET_LOAD_EXAMPLES: "${SUPERSET_LOAD_EXAMPLES:-yes}"
+      SUPERSET_LOG_LEVEL: "${SUPERSET_LOG_LEVEL:-info}"
 
-  # superset-worker:
-  #   image: *superset-image
-  #   container_name: superset_worker
-  #   command: ["/app/docker/docker-bootstrap.sh", "worker"]
-  #   env_file: superset/.env
-  #   restart: unless-stopped
-  #   depends_on:
-  #     superset-init:
-  #       condition: service_completed_successfully
-  #   user: "root"
-  #   volumes: *superset-volumes
-  #   healthcheck:
-  #     test:
-  #       [
-  #         "CMD-SHELL",
-  #         "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME",
-  #       ]
-  #   environment:
-  #     SUPERSET_LOG_LEVEL: "${SUPERSET_LOG_LEVEL:-info}"
+  superset-worker:
+    image: *superset-image
+    container_name: superset_worker
+    command: ["/app/docker/docker-bootstrap.sh", "worker"]
+    env_file: superset/.env
+    restart: unless-stopped
+    depends_on:
+      superset-init:
+        condition: service_completed_successfully
+    user: "root"
+    volumes: *superset-volumes
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME",
+        ]
+    environment:
+      SUPERSET_LOG_LEVEL: "${SUPERSET_LOG_LEVEL:-info}"
 
-  # superset-worker-beat:
-  #   image: *superset-image
-  #   container_name: superset_worker_beat
-  #   command: ["/app/docker/docker-bootstrap.sh", "beat"]
-  #   env_file: superset/.env
-  #   restart: unless-stopped
-  #   depends_on:
-  #     superset-init:
-  #       condition: service_completed_successfully
-  #   user: "root"
-  #   volumes: *superset-volumes
-  #   healthcheck:
-  #     disable: true
-  #   environment:
-  #     SUPERSET_LOG_LEVEL: "${SUPERSET_LOG_LEVEL:-info}"
+  superset-worker-beat:
+    image: *superset-image
+    container_name: superset_worker_beat
+    command: ["/app/docker/docker-bootstrap.sh", "beat"]
+    env_file: superset/.env
+    restart: unless-stopped
+    depends_on:
+      superset-init:
+        condition: service_completed_successfully
+    user: "root"
+    volumes: *superset-volumes
+    healthcheck:
+      disable: true
+    environment:
+      SUPERSET_LOG_LEVEL: "${SUPERSET_LOG_LEVEL:-info}"
 
 networks:
   default:
     name: data-platform
 
-# volumes:
-  # superset_home:
-  #   external: false
-  # db_home:
-  #   external: false
-  # redis:
-  #   external: false
+volumes:
+  superset_home:
+    external: false
+  db_home:
+    external: false
+  redis:
+    external: false

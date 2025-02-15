@@ -58,7 +58,25 @@ This repo is a personal study on Data Engineering / Analytics pipelines, and the
 
     The Spark UI will be available in your browser at http://localhost:8080. You should see the connected worker node, but no running applications.
 
-6. Submit a spark job, raw -> bronze
+6. Start the Nessie Catalogs
+    ```
+    just nessie
+    ```
+
+    Nessie is an open-source data catalog maintained by Dremio. Open Source Catalogs is still a rapidly-evolving space, with many in active development right now. As such,
+    many integrations are not fully developed.
+
+    Nessie specifically is not a multi-catalog service. If you have 3 catalogs (bronze, silver, gold), you have to run 3 nessie servers. Some other tools, like unitycatalog, support multiple
+    catalogs in one server, but they don't have full integration with all the open table formats we want to use.
+
+    The Nessie servers will be at:
+        - http://localhost:10001
+        - http://localhost:10002
+        - http://localhost:10003
+
+    TODO: look into Lakekeeper, a newer Iceberg REST catalog, or Unitycatalog again.
+
+7. Submit a spark job, raw -> bronze
     ```
     just etl-bronze
     ```
@@ -73,7 +91,7 @@ This repo is a personal study on Data Engineering / Analytics pipelines, and the
 
     Or, for a slightly better UX, you can use a query engine, in the next step.
 
-7. Start the Presto Server, our query engine
+8. Start the Presto Server, our query engine
     ```
     just presto
     ```
@@ -97,12 +115,40 @@ This repo is a personal study on Data Engineering / Analytics pipelines, and the
 
     NOTE: This is an async API, you'll get a JSON response with a "nextUri" field. Make a GET request to that uri to get either a "queued" message or your results. 
 
-8. Run the bronze -> silver ETL job. Then see the result in presto
+9. Run the bronze -> silver ETL job. Then see the result in presto
    ```
+   just etl-silver
+
    SELECT * from silver.data_platform_example.page_load
    ```
 
-9. Run the silver -> gold ETL job. Then see the result in presto
-   ```
-   SELECT * from gold.data_platform_example.page_loads_per_day where page = '/home' order by date asc 
-   ```
+10. Run the silver -> gold ETL job. Then see the result in presto
+    ```
+    just etl-gold
+
+    SELECT * from gold.data_platform_example.page_loads_per_day where page = '/home' order by date asc 
+    ```
+
+11. Run superset
+    ```
+    just superset
+    ```
+
+    Then open your browser to http://localhost:8088
+
+    a.) You'll want to start by deleting all the example datasets.
+
+    b.) Then, go to "Settings" -> "Database Connections" and add 3 databases. Although realistically, you'll only be using the gold database.
+
+    - bronze - presto://presto:8888/bronze
+    - silver - presto://presto:8888/silver
+    - gold - presto://presto:8888/gold
+
+    c.) Then, go to "Datasets" and import your table "gold.data_platform_example.page_loads_per_day" as a dataset
+
+    d.) Go to "Charts", select your dataset, and create a linegraph
+    - x-axis: date
+    - metrics: sum(page_load_count)
+    - dimensions: page
+
+    e.) Lastly, go to "Dashboards" and create a dashboard. Click and drag your chart onto it

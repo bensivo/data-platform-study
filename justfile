@@ -9,7 +9,7 @@ build:
     cd spark && podman build -t spark-base -f spark-base.dockerfile
     cd spark && podman build -t spark-master -f spark-master.dockerfile
     cd spark && podman build -t spark-worker -f spark-worker.dockerfile
-
+    # cd unitycatalog && podman build -t unitycatalog-ui -f unitycatalog-ui.dockerfile
 
 minio:
     podman compose up -d minio minio-init
@@ -22,14 +22,25 @@ producer:
     podman compose up -d producer
 
 spark:
-    # podman compose up -d spark-master spark-worker spark-thrift
     podman compose up -d spark-master spark-worker 
     open http://localhost:8080
+
+nessie:
+    podman compose up -d nessie-bronze nessie-silver nessie-gold
+    open http://localhost:10001
+    open http://localhost:10002
+    open http://localhost:10003
 
 presto:
     podman compose up -d presto
     open http://localhost:8888
 
+
+# unitycatalog:
+#     podman compose up -d unitycatalog-ui unitycatalog-server
+
+superset:
+    podman compose up -d redis db superset superset-init superset-worker superset-worker-beat
 
 etl-bronze:
     podman run \
