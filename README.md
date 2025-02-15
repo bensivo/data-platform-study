@@ -152,3 +152,17 @@ This repo is a personal study on Data Engineering / Analytics pipelines, and the
     - dimensions: page
 
     e.) Lastly, go to "Dashboards" and create a dashboard. Click and drag your chart onto it
+
+
+12. Bonus, duckdb
+    ```
+    just duckdb
+    ```
+
+    Duckdb is a great embedded OLAP database that is becoming increasingly popular in world of small-scale analytics and ETL.
+
+    In this project, we show how you can query your nessie + Iceberg + minio tables using Duckdb, and it's much faster than both
+    presto and spark. However, it is only really viable for smaller datasets, because duckdb itself can only run on one machine.
+
+    Currently duckdb doesn't support writing tables in iceberg format, but once they do I'll try to update this repo to use Duckdb as
+    an alternative to Spark itself for ETL.

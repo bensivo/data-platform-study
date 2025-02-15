@@ -45,7 +45,7 @@ etl-bronze:
     podman run  \
     --network data-platform \
     --name etl-bronze \
-    -v $PWD/etl:/etl \
+    -v $PWD/etl/:/etl \
     -it \
     --rm \
     spark-base /opt/spark/bin/spark-submit --master spark://spark-master:7077 /etl/bronze.py
@@ -54,7 +54,7 @@ etl-query:
     podman run \
     --network data-platform \
     --name etl-query \
-    -v $PWD/etl:/etl \
+    -v $PWD/etl/:/etl \
     -it \
     --rm \
     spark-base /opt/spark/bin/spark-submit --master spark://spark-master:7077 /etl/query.py
@@ -63,7 +63,7 @@ etl-silver:
     podman run \
     --network data-platform \
     --name etl-silver \
-    -v $PWD/etl:/etl \
+    -v $PWD/etl/:/etl \
     -it \
     --rm \
     spark-base /opt/spark/bin/spark-submit --master spark://spark-master:7077 /etl/silver.py
@@ -76,6 +76,9 @@ etl-gold:
     -it \
     --rm \
     spark-base /opt/spark/bin/spark-submit --master spark://spark-master:7077 /etl/gold.py
+
+duckdb:
+    cd duckdb && uv run python ./main.py
 
 down: 
     podman compose down
