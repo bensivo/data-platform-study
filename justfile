@@ -35,7 +35,6 @@ presto:
     podman compose up -d presto
     open http://localhost:8888
 
-
 # unitycatalog:
 #     podman compose up -d unitycatalog-ui unitycatalog-server
 
@@ -43,31 +42,39 @@ superset:
     podman compose up -d redis db superset superset-init superset-worker superset-worker-beat
 
 etl-bronze:
-    podman run \
+    podman run  \
     --network data-platform \
+    --name etl-bronze \
     -v $PWD/etl:/etl \
     -it \
+    --rm \
     spark-base /opt/spark/bin/spark-submit --master spark://spark-master:7077 /etl/bronze.py
 
 etl-query:
     podman run \
     --network data-platform \
+    --name etl-query \
     -v $PWD/etl:/etl \
     -it \
+    --rm \
     spark-base /opt/spark/bin/spark-submit --master spark://spark-master:7077 /etl/query.py
 
 etl-silver:
     podman run \
     --network data-platform \
+    --name etl-silver \
     -v $PWD/etl:/etl \
     -it \
+    --rm \
     spark-base /opt/spark/bin/spark-submit --master spark://spark-master:7077 /etl/silver.py
 
 etl-gold:
     podman run \
     --network data-platform \
+    --name etl-gold \
     -v $PWD/etl:/etl \
     -it \
+    --rm \
     spark-base /opt/spark/bin/spark-submit --master spark://spark-master:7077 /etl/gold.py
 
 down: 
