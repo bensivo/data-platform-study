@@ -9,6 +9,7 @@ build:
     cd spark && podman build -t spark-base -f spark-base.dockerfile
     cd spark && podman build -t spark-master -f spark-master.dockerfile
     cd spark && podman build -t spark-worker -f spark-worker.dockerfile
+    cd etl && podman build -t spark-jupyter -f spark-jupyter.dockerfile
     # cd unitycatalog && podman build -t unitycatalog-ui -f unitycatalog-ui.dockerfile
 
 minio:
@@ -30,6 +31,11 @@ nessie:
     open http://localhost:10001
     open http://localhost:10002
     open http://localhost:10003
+
+jupyter:
+    podman compose up -d spark-jupyter
+    open http://localhost:8082
+
 
 presto:
     podman compose up -d presto

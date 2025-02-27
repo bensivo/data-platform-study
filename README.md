@@ -76,7 +76,12 @@ This repo is a personal study on Data Engineering / Analytics pipelines, and the
 
     TODO: look into Lakekeeper, a newer Iceberg REST catalog, or Unitycatalog again.
 
-7. Submit a spark job, raw -> bronze
+7. Start the Spark + Jupyter server, which will run our ETL scripts
+    ```
+    just jupyter
+    ```
+
+8. Submit a spark job, raw -> bronze
     ```
     just etl-bronze
     ```

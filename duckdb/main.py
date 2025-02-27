@@ -66,4 +66,3 @@ r.show()
 print('gold.data_platform_example.page_loads_per_day')
 r = get_table(nessie_url='http://localhost:10003', schema='data_platform_example', table='page_loads_per_day')
 r.show()
-

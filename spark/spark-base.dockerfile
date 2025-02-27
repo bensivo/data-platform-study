@@ -1,7 +1,7 @@
 FROM debian:12
 
 RUN apt update
-RUN apt install -y python3 python3-pip curl wget tar procps
+RUN apt install -y python3 python3-pip python3-venv curl wget tar procps
 
 # Install Java 11 from AWS's Corretto distribution
 RUN apt-get install -y java-common

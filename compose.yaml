@@ -60,6 +60,14 @@ services:
     container_name: spark-worker
     ports:
       - "8081:8081"
+  
+  spark-jupyter:
+    image: spark-jupyter
+    container_name: spark-jupyter
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./etl:/spark-jupyter/etl
 
   # unitycatalog-ui:
   #   image: unitycatalog-ui

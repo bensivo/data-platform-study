@@ -45,7 +45,7 @@ def main():
             data=json.dumps(event)
         )
 
-        time.sleep(0.5)
+        time.sleep(0.1)
 
 
 
