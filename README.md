@@ -69,10 +69,7 @@ This repo is a personal study on Data Engineering / Analytics pipelines, and the
     Nessie specifically is not a multi-catalog service. If you have 3 catalogs (bronze, silver, gold), you have to run 3 nessie servers. Some other tools, like unitycatalog, support multiple
     catalogs in one server, but they don't have full integration with all the open table formats we want to use.
 
-    The Nessie servers will be at:
-        - http://localhost:10001
-        - http://localhost:10002
-        - http://localhost:10003
+    The Nessie server will be at http://localhost:19120
 
     TODO: look into Lakekeeper, a newer Iceberg REST catalog, or Unitycatalog again.
 

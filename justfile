@@ -27,10 +27,12 @@ spark:
     open http://localhost:8080
 
 nessie:
-    podman compose up -d nessie-bronze nessie-silver nessie-gold
-    open http://localhost:10001
-    open http://localhost:10002
-    open http://localhost:10003
+    # podman compose up -d nessie-bronze nessie-silver nessie-gold
+    # open http://localhost:10001
+    # open http://localhost:10002
+    # open http://localhost:10003
+    podman compose up -d nessie
+    open http://localhost:19120
 
 jupyter:
     podman compose up -d spark-jupyter

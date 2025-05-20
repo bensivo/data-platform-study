@@ -86,21 +86,27 @@ services:
 
   # docker run -d -p 9083:9083 --env SERVICE_NAME=metastore --name metastore-standalone apache/hive:${HIVE_VERSION}
 
-  nessie-bronze:
+  nessie:
     image: projectnessie/nessie:latest
-    container_name: nessie-bronze
+    container_name: nessie
     ports:
-      - 10001:19120    
-  nessie-silver:
-    image: projectnessie/nessie:latest
-    container_name: nessie-silver
-    ports:
-      - 10002:19120   
-  nessie-gold:
-    image: projectnessie/nessie:latest
-    container_name: nessie-gold
-    ports:
-      - 10003:19120   
+      - 19120:19120    
+
+  # nessie-bronze:
+  #   image: projectnessie/nessie:latest
+  #   container_name: nessie-bronze
+  #   ports:
+  #     - 10001:19120    
+  # nessie-silver:
+  #   image: projectnessie/nessie:latest
+  #   container_name: nessie-silver
+  #   ports:
+  #     - 10002:19120   
+  # nessie-gold:
+  #   image: projectnessie/nessie:latest
+  #   container_name: nessie-gold
+  #   ports:
+  #     - 10003:19120   
 
   presto:
     image: prestodb/presto
@@ -110,9 +116,7 @@ services:
     volumes:
       - ./presto/config.properties:/opt/presto-server/etc/config.properties
       - ./presto/jvm.config:/opt/presto-server/etc/jvm.config
-      - ./presto/bronze.properties:/opt/presto-server/etc/catalog/bronze.properties
-      - ./presto/silver.properties:/opt/presto-server/etc/catalog/silver.properties
-      - ./presto/gold.properties:/opt/presto-server/etc/catalog/gold.properties
+      - ./presto/example.properties:/opt/presto-server/etc/catalog/example.properties
 
   
   redis:
